@@ -58,15 +58,14 @@ type Subscription struct {
 // Follows the Message Encryption for Web Push, and VAPID protocols
 func SendNotification(message []byte, s *Subscription, options *Options) (*http.Response, error) {
 	// Decode auth and p256
-	b64 := base64.RawURLEncoding
+	b64 := base64.URLEncoding
 
-	// Chrome bug appends "=" to the end
-	clientAuthSecret, err := b64.DecodeString(strings.TrimRight(s.Keys.Auth, "="))
+	clientAuthSecret, err := b64.DecodeString(base64Pad(s.Keys.Auth))
 	if err != nil {
 		return &http.Response{}, err
 	}
 
-	clientPublicKey, err := b64.DecodeString(strings.TrimRight(s.Keys.P256dh, "="))
+	clientPublicKey, err := b64.DecodeString(base64Pad(s.Keys.P256dh))
 	if err != nil {
 		return &http.Response{}, err
 	}
@@ -173,6 +172,15 @@ func SendNotification(message []byte, s *Subscription, options *Options) (*http.
 	}
 
 	return resp, nil
+}
+
+// Returns a copy of string, padded to the 4-byte boundary
+func base64Pad(input string) string {
+	remainder := len(input) % 4
+	if remainder != 0 {
+		return input + strings.Repeat("=", 4-remainder)
+	}
+	return input
 }
 
 // Returns a key of length "length" given an hkdf function
