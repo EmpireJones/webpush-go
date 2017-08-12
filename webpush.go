@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -89,8 +90,8 @@ func SendNotification(message []byte, s *Subscription, options *Options) (*http.
 
 	// Shared secret
 	publicKeyX, publicKeyY := elliptic.Unmarshal(curve, clientPublicKey)
-	if publicKeyY == nil {
-		return &http.Response{}, err
+	if publicKeyX == nil {
+		return &http.Response{}, errors.New("[webpush] Failed to unmarshal elliptic")
 	}
 
 	sx, _ := curve.ScalarMult(publicKeyX, publicKeyY, privateKey)
